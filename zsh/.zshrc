@@ -110,4 +110,5 @@ alias vim="nvim ."
 # paths
  PATH="$PATH":"$HOME/.local/scripts/"
 
+# macro hotkeys
 bindkey -s ^f "tmux-sessionizer\n"
