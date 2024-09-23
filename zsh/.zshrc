@@ -106,6 +106,8 @@ source $ZSH/oh-my-zsh.sh
 # aliases
 alias vi="nvim"
 alias vim="nvim ."
+alias tks="tmux kill-server"
+alias ta="tmux attach"
 
 # paths
  PATH="$PATH":"$HOME/.local/scripts/"
