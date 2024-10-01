@@ -143,11 +143,6 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/yarai/.local/share/nvim/site/pack/packer/start/vim-be-good",
     url = "https://github.com/theprimeagen/vim-be-good"
-  },
-  ["vim-fugitive"] = {
-    loaded = true,
-    path = "/home/yarai/.local/share/nvim/site/pack/packer/start/vim-fugitive",
-    url = "https://github.com/tpope/vim-fugitive"
   }
 }
 
