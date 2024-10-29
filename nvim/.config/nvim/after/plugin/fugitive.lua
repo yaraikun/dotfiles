@@ -14,9 +14,10 @@ autocmd("BufWinEnter", {
         end
 
         -- Keybinds set.
-        vim.keymap.set("n", "<leader>gq", "<cmd>q<cr>", { buffer = 0 })
-        vim.keymap.set("n", "<leader>ga", "<cmd>Git add .<cr>", { buffer = 0 })
-        vim.keymap.set("n", "<leader>gc", "<cmd>Git commit -a<cr>", { buffer = 0 })
-        vim.keymap.set("n", "<leader>p", "<cmd>Git commit -a<cr>", { buffer = 0 })
+        vim.keymap.set("n", "<leader>gs", "<cmd>q<cr>", { buffer = 0 })
+        vim.keymap.set("n", "<leader>a", "<cmd>Git add .<cr>", { buffer = 0 })
+        vim.keymap.set("n", "<leader>c", "<cmd>Git commit -a<cr>", { buffer = 0 })
+        vim.keymap.set("n", "<leader>p", "<cmd>Git push<cr>", { buffer = 0 })
+        vim.keymap.set("n", "<leader>P", "<cmd>Git pull --rebase<cr>", { buffer = 0 })
     end,
 })
