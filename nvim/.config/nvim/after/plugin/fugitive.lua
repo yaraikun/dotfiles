@@ -1,7 +1,6 @@
 vim.keymap.set("n", "<leader>gs", vim.cmd.Git)
 
 local yarai_Fugitive = vim.api.nvim_create_augroup("yarai_Fugitive", {})
-
 local autocmd = vim.api.nvim_create_autocmd
 
 autocmd("BufWinEnter", {
@@ -15,8 +14,9 @@ autocmd("BufWinEnter", {
         end
 
         -- Keybinds set.
-        vim.keymap.set("n", "<leader>gq", "<cmd>q<cr>")
-        vim.keymap.set("n", "<leader>ga", "<cmd>Git add .<cr>")
-        vim.keymap.set("n", "<leader>gc", "<cmd>Git commit -a<cr>")
+        vim.keymap.set("n", "<leader>gq", "<cmd>q<cr>", { buffer = 0 })
+        vim.keymap.set("n", "<leader>ga", "<cmd>Git add .<cr>", { buffer = 0 })
+        vim.keymap.set("n", "<leader>gc", "<cmd>Git commit -a<cr>", { buffer = 0 })
+        vim.keymap.set("n", "<leader>p", "<cmd>Git commit -a<cr>", { buffer = 0 })
     end,
 })
