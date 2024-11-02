@@ -108,6 +108,8 @@ alias vi="nvim"
 alias vim="nvim ."
 alias ta="tmux a"
 alias tks="tmux kill-server"
+alias dnf="dnf5"
+alias sudo="sudo "
 
 # paths
  PATH="$PATH":"$HOME/.local/scripts/"
