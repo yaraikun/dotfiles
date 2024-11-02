@@ -41,7 +41,7 @@ cmp.setup({
 
 require("mason").setup()
 require("mason-lspconfig").setup({
-    ensure_installed = { 'lua_ls', 'clangd', 'rust_analyzer'}
+    ensure_installed = { 'lua_ls', 'clangd', 'rust_analyzer', 'texlab'}
 })
 require("lspconfig").lua_ls.setup {
     settings = {
@@ -70,6 +70,37 @@ require("lspconfig").rust_analyzer.setup {
             procMacro = {
                 enable = true
             },
+        }
+    }
+}
+require("lspconfig").texlab.setup {
+    settings = {
+        texlab = {
+            auxDirectory = ".",
+            bibtexFormatter = "texlab",
+            build = {
+                executable = "tectonic",
+                args = {
+                    "-X",
+                    "compile",
+                    "%f",
+                    "--synctex",
+                    "--keep-logs",
+                    "--keep-intermediates"
+                },
+                forwardSearchAfter = true,
+                onSave = false
+            },
+            chktex = {
+                onEdit = false,
+                onOpenAndSave = false
+            },
+            diagnosticsDelay = 300,
+            formatterLineLength = 80,
+            latexFormatter = "latexindent",
+            latexindent = {
+                modifyLineBreaks = false
+            }
         }
     }
 }
