@@ -108,8 +108,7 @@ alias vi="nvim"
 alias vim="nvim ."
 alias ta="tmux a"
 alias tks="tmux kill-server"
-alias dnf="dnf5"
-alias sudo="sudo "
+alias frequentgit='history | cut -c 8- | grep git | sort | uniq -c  | sort -n -r | head -n 10'
 
 # paths
  PATH="$PATH":"$HOME/.local/scripts/"
