@@ -104,6 +104,7 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 # aliases
+alias vi="nvim ."
 alias vim="nvim"
 alias ta="tmux a"
 alias tks="tmux kill-server"
