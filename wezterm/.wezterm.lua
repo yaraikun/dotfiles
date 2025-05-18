@@ -1,0 +1,14 @@
+local wezterm = require 'wezterm'
+local config = {}
+
+config.color_scheme = 'rose-pine'
+config.window_background_opacity = 0.95
+config.colors = {
+    background = "black",
+}
+config.enable_tab_bar = false
+
+config.font = wezterm.font 'Fira Code'
+config.font_size = 24.0
+
+return config
