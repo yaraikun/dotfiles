@@ -1,9 +1,11 @@
 local wezterm = require 'wezterm'
 local config = {}
 
+config.window_decorations = "RESIZE"
 config.color_scheme = 'rose-pine'
+config.window_background_opacity = 0.85
 -- config.window_background_opacity = 0.90
-config.window_background_opacity = 0.95
+-- config.window_background_opacity = 0.95
 -- config.window_background_opacity = 1
 config.colors = {
     background = "black",
