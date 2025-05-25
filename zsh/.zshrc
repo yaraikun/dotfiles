@@ -120,3 +120,5 @@ bindkey -s ^f "tmux-sessionizer\n"
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 alias gh-create='gh repo create --private --source=. --remote=origin && git push -u --all && gh browse'
+
+export BAT_THEME="rose-pine"
