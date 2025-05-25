@@ -6,6 +6,9 @@ config.colors = {
     background = "black",
 }
 config.color_scheme = 'rose-pine'
+-- config.color_scheme = 'City Streets (terminal.sexy)'
+-- config.color_scheme = 'Dawn (terminal.sexy)'
+-- config.color_scheme = 'Deafened (terminal.sexy)'
 
 -- APPEARANCE
 config.enable_tab_bar = false
