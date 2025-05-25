@@ -103,12 +103,16 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+# bat
+export BAT_THEME="rose-pine"
+
 # aliases
 alias vi="nvim ."
 alias vim="nvim"
 alias ta="tmux a"
 alias tks="tmux kill-server"
 alias frequentgit='history | cut -c 8- | grep git | sort | uniq -c  | sort -n -r | head -n 10'
+alias ls="eza --color=always --icons=always --long --no-permissions --no-user"
 
 # paths
 PATH="$PATH":"$HOME/.local/scripts/"
@@ -116,9 +120,7 @@ PATH="$PATH":"$HOME/.local/scripts/"
 # macro hotkeys
 bindkey -s ^f "tmux-sessionizer\n"
 
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+# sdkman
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 alias gh-create='gh repo create --private --source=. --remote=origin && git push -u --all && gh browse'
-
-export BAT_THEME="rose-pine"
