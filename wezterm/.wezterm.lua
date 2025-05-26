@@ -6,14 +6,11 @@ config.colors = {
     background = "black",
 }
 config.color_scheme = 'rose-pine'
--- config.color_scheme = 'City Streets (terminal.sexy)'
--- config.color_scheme = 'Dawn (terminal.sexy)'
--- config.color_scheme = 'Deafened (terminal.sexy)'
 
 -- APPEARANCE
 config.enable_tab_bar = false
 config.window_decorations = "RESIZE"
-config.window_background_opacity = 0.95
+config.window_background_opacity = 0.85
 config.window_padding = {
     left = 0,
     right = 0,
