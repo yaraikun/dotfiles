@@ -125,7 +125,8 @@ export SDKMAN_DIR="$HOME/.sdkman"
 alias gh-create='gh repo create --private --source=. --remote=origin && git push -u --all && gh browse'
 
 # eza
-alias ls="eza"
+alias ls="eza --icons --no-user --no-permissions"
+alias tree="eza --tree"
 
 # thefuck
 eval $(thefuck --alias)
