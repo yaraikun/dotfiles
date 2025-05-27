@@ -116,6 +116,9 @@ alias ta="tmux a"
 alias tks="tmux kill-server"
 bindkey -s ^f "tmux-sessionizer\n"
 
+# git
+alias gistory='history | cut -c 8- | grep g | sort | uniq -c  | sort -n -r | head -n 10'
+
 # bat
 export BAT_THEME="rose-pine"
 
@@ -125,7 +128,7 @@ export SDKMAN_DIR="$HOME/.sdkman"
 alias gh-create='gh repo create --private --source=. --remote=origin && git push -u --all && gh browse'
 
 # eza
-alias ls="eza --icons --no-user --no-permissions"
+alias ls="eza --icons --no-user --no-permissions --sort type"
 alias tree="eza --tree"
 
 # thefuck
