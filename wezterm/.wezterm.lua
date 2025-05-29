@@ -20,6 +20,6 @@ config.window_padding = {
 
 -- FONT
 config.font = wezterm.font 'Fira Code'
-config.font_size = 24.0
+config.font_size = 28.0
 
 return config
