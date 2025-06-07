@@ -106,8 +106,8 @@ source $ZSH/oh-my-zsh.sh
 # paths
 PATH="$PATH":"$HOME/.local/scripts/"
 
-
 # nvim
+export EDITOR="nvim"
 alias vi="nvim ."
 alias vim="nvim"
 
@@ -134,3 +134,6 @@ alias tree="eza --tree"
 # thefuck
 eval $(thefuck --alias)
 eval $(thefuck --alias fk)
+
+# fzf
+eval "$(fzf --zsh)"
