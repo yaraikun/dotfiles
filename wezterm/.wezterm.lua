@@ -10,7 +10,7 @@ config.color_scheme = 'rose-pine'
 -- APPEARANCE
 config.enable_tab_bar = false
 config.window_decorations = "RESIZE"
-config.window_background_opacity = 0.80
+config.window_background_opacity = 0.90
 config.window_padding = {
     left = 0,
     right = 0,
