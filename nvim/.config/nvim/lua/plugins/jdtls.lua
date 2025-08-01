@@ -1,5 +1,10 @@
 return {
     "mfussenegger/nvim-jdtls",
+
+    dependenceis = {
+        "nvim-lua/plenary.nvim"
+    },
+
     config = function()
         local config = {
             cmd = { "/opt/homebrew/opt/jdtls/bin/jdtls" },

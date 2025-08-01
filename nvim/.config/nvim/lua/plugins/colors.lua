@@ -4,12 +4,6 @@ function ColorMyPencils(color)
 
     vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
     vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
-
-    -- vim.api.nvim_set_hl(0, 'MsgArea', { fg = '#8787b2', bg = '#262626' })
-    -- vim.api.nvim_set_hl(0, 'ErrorMsg', { fg = '#FF0000', bg = '#262626' })
-    -- vim.api.nvim_set_hl(0, 'WarningMsg', { fg = '#FFFF00', bg = '#262626' })
-    -- vim.api.nvim_set_hl(0, 'MoreMsg', { fg = '#90EE90', bg = '#262626' })
-    -- vim.api.nvim_set_hl(0, 'Question', { fg = '#00FFFF', bg = '#262626' })
 end
 
 return {
