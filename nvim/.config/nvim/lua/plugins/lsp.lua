@@ -87,8 +87,4 @@ return {
             })
         end,
     },
-
-    -- Mason Configuration (as a dependency of nvim-lspconfig)
-    -- { "williamboman/mason.nvim" },
-    -- { "williamboman/mason-lspconfig.nvim" },
 }
