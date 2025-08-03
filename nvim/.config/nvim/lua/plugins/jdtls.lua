@@ -1,7 +1,7 @@
 return {
     "mfussenegger/nvim-jdtls",
 
-    dependenceis = {
+    dependencies = {
         "nvim-lua/plenary.nvim"
     },
 

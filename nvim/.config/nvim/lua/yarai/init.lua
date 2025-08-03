@@ -1,3 +1,3 @@
 require("yarai.lazy")
-require("yarai.remap")
+require("yarai.map")
 require("yarai.set")
