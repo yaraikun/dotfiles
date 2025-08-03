@@ -21,6 +21,7 @@ vim.opt.hlsearch = true
 vim.opt.incsearch = true
 
 vim.opt.termguicolors = true
+vim.cmd(":hi statusline guibg=NONE")
 
 vim.opt.scrolloff = 8
 vim.opt.signcolumn = "yes"
