@@ -1,3 +1,6 @@
-require("yarai.lazy")
-require("yarai.map")
-require("yarai.set")
+return {
+    {
+        "nvim-lua/plenary.nvim",
+        name = "plenary"
+    },
+}
