@@ -12,11 +12,6 @@ return {
             require("mason").setup()
             require("mason-lspconfig").setup({
                 ensure_installed = { "clangd", "lua_ls",
-                    "sqlls",
-                    "html",
-                    "cssls",
-                    "kotlin_language_server",
-                    "pyright",
                 },
             })
 
@@ -35,27 +30,6 @@ return {
                         },
                     },
                 },
-            }
-
-            lspconfig.sqlls.setup {
-                capabilities = capabilities,
-            }
-
-            lspconfig.html.setup {
-                capabilities = capabilities,
-            }
-
-            lspconfig.cssls.setup {
-                capabilities = capabilities,
-            }
-
-
-            lspconfig.kotlin_language_server.setup {
-                capabilities = capabilities,
-            }
-
-            lspconfig.pyright.setup {
-                capabilities = capabilities,
             }
 
             vim.api.nvim_create_autocmd('LspAttach', {
