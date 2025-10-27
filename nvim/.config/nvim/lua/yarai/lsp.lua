@@ -88,4 +88,35 @@ return {
             })
         end,
     },
+
+    -- {
+    --     'stevearc/conform.nvim',
+    --     event = { 'BufWritePre' }, -- Run format on save
+    --     cmd = { 'ConformInfo' },
+    --     opts = {
+    --         -- Set up formatters
+    --         formatters_by_ft = {
+    --             -- Tell conform to use 'ktlint' for 'kotlin' files
+    --             kotlin = { 'ktlint' },
+    --         },
+    --
+    --         formatters = {
+    --             ktlint = {
+    --                 -- This is the fix. We tell it to use the -F flag
+    --                 -- and pass the file contents via stdin.
+    --                 command = "ktlint",
+    --                 args = { "-F", },
+    --                 stdin = true,
+    --             },
+    --         },
+    --
+    --         -- Set up format on save
+    --         format_on_save = {
+    --             timeout_ms = 5000,
+    --             -- Use lsp_fallback = true to allow the LSP server to format
+    --             -- if conform.nvim doesn't have a formatter configured for this filetype.
+    --             lsp_fallback = true,
+    --         },
+    --     },
+    -- },
 }

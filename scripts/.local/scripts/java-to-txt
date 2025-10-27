@@ -1,1 +1,50 @@
-for file in *.java; do mv "$file" "${file%.java}.txt"; done
+# #!/usr/bin/env bash
+#
+# read -p "Enter the file extension to convert from (e.g., java): " from_ext
+# read -p "Enter the new file extension to convert to (e.g., txt): " to_ext
+#
+# from_ext_dot=".$from_ext"
+# to_ext_dot=".$to_ext"
+#
+# mkdir -p convertify
+#
+# for file in *.java; do cp "$file" "convertify/${file%.java}.txt"; done
+#
+
+#!/usr/bin/env bash
+
+# --- User Input ---
+
+read -p "Enter the file extension to convert from (e.g., java): " from_ext
+read -p "Enter the new file extension to convert to (e.g., txt): " to_ext
+
+# Ensure the extensions start with a dot
+from_ext_dot=".$from_ext"
+to_ext_dot=".$to_ext"
+
+# Define the target output directory
+TARGET_DIR="convertify"
+
+# Create the target directory if it doesn't already exist
+mkdir -p "$TARGET_DIR"
+
+echo "--- Starting recursive conversion: *${from_ext_dot} to *${to_ext_dot} ---"
+
+find . -type f -name "*${from_ext_dot}" -print0 | while IFS= read -r -d $'\0' file; do
+    # 1. Extract the basename of the file (e.g., 'gui/GameFrame.java' -> 'GameFrame.java')
+    # This ensures we don't have directory paths in the output file name.
+    base_name=$(basename "$file")
+
+    # 2. Remove the source extension to get the clean name (e.g., 'GameFrame.java' -> 'GameFrame')
+    clean_name="${base_name%$from_ext_dot}"
+
+    # 3. Construct the new file path in the 'convertify' folder
+    new_file_path="${TARGET_DIR}/${clean_name}${to_ext_dot}"
+
+    # 4. Copy the file
+    cp "$file" "$new_file_path"
+    echo "Copied '$file' to '$new_file_path'"
+done
+
+echo "---"
+echo "Conversion complete! All matching files are flattened into the '$TARGET_DIR' folder."
