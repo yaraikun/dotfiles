@@ -137,3 +137,7 @@ eval $(thefuck --alias fk)
 
 # fzf
 eval "$(fzf --zsh)"
+
+# mysql
+export PATH=$PATH:/usr/local/mysql/bin
+
