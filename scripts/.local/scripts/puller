@@ -1,4 +1,24 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
+# ---------- Config ----------
+DRY_RUN=false
+AUTO_CONFIRM=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) DRY_RUN=true ;;
+    --yes) AUTO_CONFIRM=true ;;
+  esac
+done
+
+run() {
+  if $DRY_RUN; then
+    echo "  ${DIM}[dry-run]${RESET} $*"
+  else
+    "$@"
+  fi
+}
 
 # ---------- Styling ----------
 if [[ -t 1 ]]; then
@@ -14,30 +34,44 @@ else
   GREEN=""; YELLOW=""; BLUE=""; RED=""
 fi
 
-section() {
-  echo
-  echo "${BOLD}${BLUE}==> $1${RESET}"
-}
+section() { echo -e "\n${BOLD}${BLUE}==> $1${RESET}"; }
+step()    { echo "  ${GREEN}•${RESET} $1"; }
+warn()    { echo "  ${YELLOW}!${RESET} $1"; }
+error()   { echo "  ${RED}✖${RESET} $1"; }
 
-step() {
-  echo "  ${GREEN}•${RESET} $1"
-}
+# ---------- Safety Checks ----------
+section "Pre-flight checks"
 
-warn() {
-  echo "  ${YELLOW}!${RESET} $1"
-}
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  error "Not inside a git repository"
+  exit 1
+fi
 
+if ! git remote get-url origin >/dev/null 2>&1; then
+  error "No 'origin' remote found"
+  exit 1
+fi
+
+if ! git diff-index --quiet HEAD --; then
+  error "Uncommitted changes detected. Commit or stash first."
+  exit 1
+fi
+
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+step "Current branch: ${BOLD}$CURRENT_BRANCH${RESET}"
+
+# ---------- Fetch ----------
 section "Fetching and pruning remotes"
+run git fetch --all --prune
 
-git fetch --all --prune
 DEFAULT_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
 step "Default branch detected: ${BOLD}$DEFAULT_BRANCH${RESET}"
 
+# ---------- Sync Branches ----------
 section "Syncing remote branches"
 
-for remote_branch in $(git branch -r | grep -v '\->'); do
+while read -r remote_branch; do
   local_branch=${remote_branch#origin/}
-
   [[ "$local_branch" == "HEAD" ]] && continue
 
   echo
@@ -45,30 +79,47 @@ for remote_branch in $(git branch -r | grep -v '\->'); do
 
   if git show-ref --verify --quiet "refs/heads/$local_branch"; then
     step "Exists locally — updating"
-    git checkout "$local_branch" >/dev/null 2>&1
-    git pull origin "$local_branch"
+    run git checkout "$local_branch" >/dev/null 2>&1
+    run git pull --ff-only origin "$local_branch"
   else
     step "Missing locally — creating & tracking"
-    git checkout -b "$local_branch" --track "$remote_branch"
+    run git checkout -b "$local_branch" --track "$remote_branch"
   fi
-done
+done < <(git branch -r | grep -v '\->')
 
+# ---------- Cleanup ----------
 section "Cleaning up orphaned local branches"
 
-orphaned=$(git branch -vv | grep ': gone]' | awk '{print $1}')
-if [[ -z "$orphaned" ]]; then
+mapfile -t orphaned < <(git branch -vv | grep ': gone]' | awk '{print $1}')
+
+if [[ ${#orphaned[@]} -eq 0 ]]; then
   step "No orphaned branches found"
 else
-  echo "$orphaned" | while read -r branch; do
+  warn "Orphaned branches detected:"
+  for b in "${orphaned[@]}"; do
+    echo "   - $b"
+  done
+
+  if ! $AUTO_CONFIRM; then
+    echo
+    read -rp "Delete these branches? [y/N]: " confirm
+    [[ "$confirm" =~ ^[Yy]$ ]] || {
+      warn "Skipping deletion"
+      orphaned=()
+    }
+  fi
+
+  for branch in "${orphaned[@]}"; do
     warn "Deleting $branch"
-    git branch -D "$branch"
+    run git branch -d "$branch" || warn "Skipped $branch (not fully merged)"
   done
 fi
 
-section "Returning to default branch"
-
-git checkout "$DEFAULT_BRANCH" >/dev/null 2>&1
-step "Checked out $DEFAULT_BRANCH"
+# ---------- Return to original branch ----------
+section "Returning to original branch"
+run git checkout "$CURRENT_BRANCH" >/dev/null 2>&1
+step "Checked out $CURRENT_BRANCH"
 
 echo
-echo "${BOLD}${GREEN}✔ All branches synced, updated, and cleaned.${RESET}"
+echo "${BOLD}${GREEN}✔ Sync complete. Safe, clean, and consistent.${RESET}"
+
