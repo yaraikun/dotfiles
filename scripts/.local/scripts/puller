@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+# ---------- Styling ----------
+if [[ -t 1 ]]; then
+  BOLD=$(tput bold)
+  DIM=$(tput dim)
+  RESET=$(tput sgr0)
+  GREEN=$(tput setaf 2)
+  YELLOW=$(tput setaf 3)
+  BLUE=$(tput setaf 4)
+  RED=$(tput setaf 1)
+else
+  BOLD=""; DIM=""; RESET=""
+  GREEN=""; YELLOW=""; BLUE=""; RED=""
+fi
+
+section() {
+  echo
+  echo "${BOLD}${BLUE}==> $1${RESET}"
+}
+
+step() {
+  echo "  ${GREEN}•${RESET} $1"
+}
+
+warn() {
+  echo "  ${YELLOW}!${RESET} $1"
+}
+
+section "Fetching and pruning remotes"
+
+git fetch --all --prune
+DEFAULT_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
+step "Default branch detected: ${BOLD}$DEFAULT_BRANCH${RESET}"
+
+section "Syncing remote branches"
+
+for remote_branch in $(git branch -r | grep -v '\->'); do
+  local_branch=${remote_branch#origin/}
+
+  [[ "$local_branch" == "HEAD" ]] && continue
+
+  echo
+  echo "${BOLD}→ Branch:${RESET} $local_branch"
+
+  if git show-ref --verify --quiet "refs/heads/$local_branch"; then
+    step "Exists locally — updating"
+    git checkout "$local_branch" >/dev/null 2>&1
+    git pull origin "$local_branch"
+  else
+    step "Missing locally — creating & tracking"
+    git checkout -b "$local_branch" --track "$remote_branch"
+  fi
+done
+
+section "Cleaning up orphaned local branches"
+
+orphaned=$(git branch -vv | grep ': gone]' | awk '{print $1}')
+if [[ -z "$orphaned" ]]; then
+  step "No orphaned branches found"
+else
+  echo "$orphaned" | while read -r branch; do
+    warn "Deleting $branch"
+    git branch -D "$branch"
+  done
+fi
+
+section "Returning to default branch"
+
+git checkout "$DEFAULT_BRANCH" >/dev/null 2>&1
+step "Checked out $DEFAULT_BRANCH"
+
+echo
+echo "${BOLD}${GREEN}✔ All branches synced, updated, and cleaned.${RESET}"
