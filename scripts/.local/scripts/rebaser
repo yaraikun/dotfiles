@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+
+# Usage: ./rebase_sync.sh <feature-branch> <base-branch>
+# Example: ./rebase_sync.sh feature-login main
+
+FEATURE_BRANCH=$1
+BASE_BRANCH=$2
+
+# ---------- Styling ----------
+if [[ -t 1 ]]; then
+  BOLD=$(tput bold)
+  DIM=$(tput dim)
+  RESET=$(tput sgr0)
+  GREEN=$(tput setaf 2)
+  YELLOW=$(tput setaf 3)
+  BLUE=$(tput setaf 4)
+  RED=$(tput setaf 1)
+else
+  BOLD=""; DIM=""; RESET=""
+  GREEN=""; YELLOW=""; BLUE=""; RED=""
+fi
+
+section() {
+  echo
+  echo "${BOLD}${BLUE}==> $1${RESET}"
+}
+
+step() {
+  echo "  ${GREEN}•${RESET} $1"
+}
+
+warn() {
+  echo "  ${YELLOW}!${RESET} $1"
+}
+
+error() {
+  echo "  ${RED}✖${RESET} $1"
+}
+
+# ---------- Args ----------
+if [[ -z "$FEATURE_BRANCH" || -z "$BASE_BRANCH" ]]; then
+  error "Missing arguments"
+  echo "Usage: ./rebase_sync.sh <branch-to-update> <onto-this-branch>"
+  exit 1
+fi
+
+# Store starting branch
+STARTING_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# ---------- Fetch ----------
+section "Fetching latest from remote"
+git fetch --all --prune
+
+# ---------- Helpers ----------
+update_branch() {
+  local br=$1
+
+  echo
+  echo "${BOLD}→ Branch:${RESET} $br"
+
+  git checkout "$br" >/dev/null 2>&1
+  step "Checked out"
+
+  if git rev-parse --symbolic-full-name "$br@{u}" >/dev/null 2>&1; then
+    step "Pulling with rebase"
+    git pull --rebase
+  else
+    warn "No remote tracking branch — skipping pull"
+  fi
+}
+
+# ---------- Update branches ----------
+section "Updating base branch"
+update_branch "$BASE_BRANCH"
+
+section "Updating feature branch"
+update_branch "$FEATURE_BRANCH"
+
+# ---------- Rebase ----------
+section "Rebasing feature branch"
+step "Rebasing ${BOLD}$FEATURE_BRANCH${RESET} onto ${BOLD}$BASE_BRANCH${RESET}"
+
+if git rebase "$BASE_BRANCH"; then
+  echo
+  echo "${GREEN}✔ Rebase successful${RESET}"
+else
+  echo
+  error "Rebase conflict detected"
+  echo
+  echo "  Resolve conflicts, then run:"
+  echo "    ${BOLD}git rebase --continue${RESET}"
+  echo
+  echo "  Current branch:"
+  echo "    ${BOLD}$(git rev-parse --abbrev-ref HEAD)${RESET}"
+  exit 1
+fi
+
+# ---------- Return ----------
+section "Restoring starting branch"
+
+if [[ "$STARTING_BRANCH" != "$FEATURE_BRANCH" ]]; then
+  git checkout "$STARTING_BRANCH" >/dev/null 2>&1
+  step "Returned to $STARTING_BRANCH"
+else
+  step "Already on $FEATURE_BRANCH"
+fi
+
+echo
+echo "${BOLD}${GREEN}✔ Rebase workflow complete.${RESET}"
