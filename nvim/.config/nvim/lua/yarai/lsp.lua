@@ -6,21 +6,22 @@ return {
             "williamboman/mason-lspconfig.nvim",
         },
         config = function()
-            local lspconfig = require("lspconfig")
-            local capabilities = vim.lsp.protocol.make_client_capabilities()
-
+            -- 1. Setup Mason and Mason-LSPConfig
             require("mason").setup()
             require("mason-lspconfig").setup({
-                ensure_installed = { "clangd", "lua_ls",
-                },
+                ensure_installed = { "clangd", "lua_ls", "tinymist" },
             })
 
-            lspconfig.clangd.setup {
+            local capabilities = vim.lsp.protocol.make_client_capabilities()
+
+            -- 2. Configure clangd
+            vim.lsp.config('clangd', {
                 capabilities = capabilities,
                 cmd = { "clangd" },
-            }
+            })
 
-            lspconfig.lua_ls.setup {
+            -- 3. Configure lua_ls
+            vim.lsp.config('lua_ls', {
                 capabilities = capabilities,
                 cmd = { "lua-language-server" },
                 settings = {
@@ -30,22 +31,25 @@ return {
                         },
                     },
                 },
-            }
+            })
 
-            lspconfig.tinymist.setup {
+            -- 4. Configure tinymist
+            vim.lsp.config('tinymist', {
                 capabilities = capabilities,
                 cmd = { "tinymist" },
                 settings = {
                     formatterMode = "typstyle",
                 },
-            }
+            })
 
+            -- 5. Actually enable the servers
+            vim.lsp.enable({ "clangd", "lua_ls", "tinymist" })
 
+            -- 6. Set up Keybindings
             vim.api.nvim_create_autocmd('LspAttach', {
                 group = vim.api.nvim_create_augroup('user_lsp_attach', { clear = true }),
                 callback = function(event)
                     local opts = { buffer = event.buf }
-
                     vim.keymap.set('n', 'gd', function() vim.lsp.buf.definition() end, opts)
                     vim.keymap.set('n', 'K', function() vim.lsp.buf.hover() end, opts)
                     vim.keymap.set('n', '<leader>vws', function() vim.lsp.buf.workspace_symbol() end, opts)
@@ -97,35 +101,4 @@ return {
             })
         end,
     },
-
-    -- {
-    --     'stevearc/conform.nvim',
-    --     event = { 'BufWritePre' }, -- Run format on save
-    --     cmd = { 'ConformInfo' },
-    --     opts = {
-    --         -- Set up formatters
-    --         formatters_by_ft = {
-    --             -- Tell conform to use 'ktlint' for 'kotlin' files
-    --             kotlin = { 'ktlint' },
-    --         },
-    --
-    --         formatters = {
-    --             ktlint = {
-    --                 -- This is the fix. We tell it to use the -F flag
-    --                 -- and pass the file contents via stdin.
-    --                 command = "ktlint",
-    --                 args = { "-F", },
-    --                 stdin = true,
-    --             },
-    --         },
-    --
-    --         -- Set up format on save
-    --         format_on_save = {
-    --             timeout_ms = 5000,
-    --             -- Use lsp_fallback = true to allow the LSP server to format
-    --             -- if conform.nvim doesn't have a formatter configured for this filetype.
-    --             lsp_fallback = true,
-    --         },
-    --     },
-    -- },
 }
