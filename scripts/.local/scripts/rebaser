@@ -1,10 +1,30 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-# Usage: ./rebase_sync.sh <feature-branch> <base-branch>
-# Example: ./rebase_sync.sh feature-login main
+# Usage:
+#   rebaser <base-branch> [--dry-run] [--yes]
+# Example:
+#   rebaser develop
 
-FEATURE_BRANCH=$1
-BASE_BRANCH=$2
+BASE_BRANCH="${1:-}"
+
+DRY_RUN=false
+AUTO_CONFIRM=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) DRY_RUN=true ;;
+    --yes) AUTO_CONFIRM=true ;;
+  esac
+done
+
+run() {
+  if $DRY_RUN; then
+    echo "  ${DIM}[dry-run]${RESET} $*"
+  else
+    "$@"
+  fi
+}
 
 # ---------- Styling ----------
 if [[ -t 1 ]]; then
@@ -20,90 +40,114 @@ else
   GREEN=""; YELLOW=""; BLUE=""; RED=""
 fi
 
-section() {
-  echo
-  echo "${BOLD}${BLUE}==> $1${RESET}"
-}
-
-step() {
-  echo "  ${GREEN}•${RESET} $1"
-}
-
-warn() {
-  echo "  ${YELLOW}!${RESET} $1"
-}
-
-error() {
-  echo "  ${RED}✖${RESET} $1"
-}
+section() { echo -e "\n${BOLD}${BLUE}==> $1${RESET}"; }
+step()    { echo "  ${GREEN}•${RESET} $1"; }
+warn()    { echo "  ${YELLOW}!${RESET} $1"; }
+error()   { echo "  ${RED}✖${RESET} $1"; }
 
 # ---------- Args ----------
-if [[ -z "$FEATURE_BRANCH" || -z "$BASE_BRANCH" ]]; then
-  error "Missing arguments"
-  echo "Usage: ./rebase_sync.sh <branch-to-update> <onto-this-branch>"
+if [[ -z "$BASE_BRANCH" ]]; then
+  error "Missing base branch"
+  echo "Usage: rebaser <base-branch> [--dry-run] [--yes]"
   exit 1
 fi
 
-# Store starting branch
-STARTING_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+# ---------- Pre-flight safety ----------
+section "Pre-flight checks"
+
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  error "Not inside a git repository"
+  exit 1
+fi
+
+if ! git diff-index --quiet HEAD --; then
+  error "Uncommitted changes detected. Commit or stash first."
+  exit 1
+fi
+
+FEATURE_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [[ "$FEATURE_BRANCH" == "$BASE_BRANCH" ]]; then
+  error "You are already on '$BASE_BRANCH'. Checkout your feature branch first."
+  exit 1
+fi
+
+step "Feature branch: ${BOLD}$FEATURE_BRANCH${RESET}"
+step "Base branch:    ${BOLD}$BASE_BRANCH${RESET}"
+
+# Verify base exists
+if ! git show-ref --verify --quiet "refs/heads/$BASE_BRANCH" &&
+   ! git ls-remote --exit-code --heads origin "$BASE_BRANCH" >/dev/null 2>&1; then
+  error "Base branch '$BASE_BRANCH' not found locally or on origin"
+  exit 1
+fi
 
 # ---------- Fetch ----------
 section "Fetching latest from remote"
-git fetch --all --prune
+run git fetch --all --prune
 
-# ---------- Helpers ----------
-update_branch() {
-  local br=$1
-
-  echo
-  echo "${BOLD}→ Branch:${RESET} $br"
-
-  git checkout "$br" >/dev/null 2>&1
-  step "Checked out"
-
-  if git rev-parse --symbolic-full-name "$br@{u}" >/dev/null 2>&1; then
-    step "Pulling with rebase"
-    git pull --rebase
-  else
-    warn "No remote tracking branch — skipping pull"
-  fi
-}
-
-# ---------- Update branches ----------
+# ---------- Update base branch ----------
 section "Updating base branch"
-update_branch "$BASE_BRANCH"
 
-section "Updating feature branch"
-update_branch "$FEATURE_BRANCH"
+run git checkout "$BASE_BRANCH" >/dev/null 2>&1
+step "Checked out $BASE_BRANCH"
 
-# ---------- Rebase ----------
-section "Rebasing feature branch"
-step "Rebasing ${BOLD}$FEATURE_BRANCH${RESET} onto ${BOLD}$BASE_BRANCH${RESET}"
-
-if git rebase "$BASE_BRANCH"; then
-  echo
-  echo "${GREEN}✔ Rebase successful${RESET}"
+if git rev-parse --symbolic-full-name "$BASE_BRANCH@{u}" >/dev/null 2>&1; then
+  step "Pulling base (fast-forward only)"
+  run git pull --ff-only
 else
-  echo
-  error "Rebase conflict detected"
-  echo
-  echo "  Resolve conflicts, then run:"
-  echo "    ${BOLD}git rebase --continue${RESET}"
-  echo
-  echo "  Current branch:"
-  echo "    ${BOLD}$(git rev-parse --abbrev-ref HEAD)${RESET}"
-  exit 1
+  warn "No remote tracking branch for base — skipping pull"
 fi
 
-# ---------- Return ----------
-section "Restoring starting branch"
+# ---------- Update feature branch ----------
+section "Updating feature branch"
 
-if [[ "$STARTING_BRANCH" != "$FEATURE_BRANCH" ]]; then
-  git checkout "$STARTING_BRANCH" >/dev/null 2>&1
-  step "Returned to $STARTING_BRANCH"
+run git checkout "$FEATURE_BRANCH" >/dev/null 2>&1
+step "Checked out $FEATURE_BRANCH"
+
+if git rev-parse --symbolic-full-name "$FEATURE_BRANCH@{u}" >/dev/null 2>&1; then
+  step "Pulling feature (fast-forward only)"
+  run git pull --ff-only
 else
-  step "Already on $FEATURE_BRANCH"
+  warn "No remote tracking branch for feature — skipping pull"
+fi
+
+# ---------- Confirm ----------
+section "Rebase plan"
+echo "  Rebase: ${BOLD}$FEATURE_BRANCH${RESET}"
+echo "  Onto:   ${BOLD}$BASE_BRANCH${RESET}"
+
+if ! $AUTO_CONFIRM; then
+  echo
+  read -rp "Proceed with rebase? [y/N]: " confirm
+  [[ "$confirm" =~ ^[Yy]$ ]] || {
+    warn "Rebase cancelled"
+    exit 0
+  }
+fi
+
+# ---------- Rebase ----------
+section "Rebasing"
+
+if $DRY_RUN; then
+  step "[dry-run] git rebase $BASE_BRANCH"
+else
+  if git rebase "$BASE_BRANCH"; then
+    echo
+    echo "${GREEN}✔ Rebase successful${RESET}"
+  else
+    echo
+    error "Rebase conflict detected"
+    echo
+    echo "  Resolve conflicts, then run:"
+    echo "    ${BOLD}git rebase --continue${RESET}"
+    echo
+    echo "  Or abort safely:"
+    echo "    ${BOLD}git rebase --abort${RESET}"
+    exit 1
+  fi
 fi
 
 echo
-echo "${BOLD}${GREEN}✔ Rebase workflow complete.${RESET}"
+echo "${BOLD}${GREEN}✔ Done. ${FEATURE_BRANCH} is now rebased onto ${BASE_BRANCH}.${RESET}"
+
