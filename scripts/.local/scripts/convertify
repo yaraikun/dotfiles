@@ -1,50 +1,118 @@
-# #!/usr/bin/env bash
-#
-# read -p "Enter the file extension to convert from (e.g., java): " from_ext
-# read -p "Enter the new file extension to convert to (e.g., txt): " to_ext
-#
-# from_ext_dot=".$from_ext"
-# to_ext_dot=".$to_ext"
-#
-# mkdir -p convertify
-#
-# for file in *.java; do cp "$file" "convertify/${file%.java}.txt"; done
-#
-
 #!/usr/bin/env bash
+set -euo pipefail
 
-# --- User Input ---
+# Usage:
+#   convertify <ext1> <ext2> ... -o <output_ext> [--append] [--dry-run] [--yes]
+#   convertify -o <output_ext> <ext1> <ext2> ...
+#
+# Examples:
+#   convertify tsx ts html -o txt
+#   convertify tsx ts -o txt --append   # app.tsx -> app.tsx.txt
 
-read -p "Enter the file extension to convert from (e.g., java): " from_ext
-read -p "Enter the new file extension to convert to (e.g., txt): " to_ext
+OUTPUT=""
+INPUT_EXTS=()
+DRY_RUN=false
+AUTO_CONFIRM=false
+APPEND=false
 
-# Ensure the extensions start with a dot
-from_ext_dot=".$from_ext"
-to_ext_dot=".$to_ext"
-
-# Define the target output directory
-TARGET_DIR="convertify"
-
-# Create the target directory if it doesn't already exist
-mkdir -p "$TARGET_DIR"
-
-echo "--- Starting recursive conversion: *${from_ext_dot} to *${to_ext_dot} ---"
-
-find . -type f -name "*${from_ext_dot}" -print0 | while IFS= read -r -d $'\0' file; do
-    # 1. Extract the basename of the file (e.g., 'gui/GameFrame.java' -> 'GameFrame.java')
-    # This ensures we don't have directory paths in the output file name.
-    base_name=$(basename "$file")
-
-    # 2. Remove the source extension to get the clean name (e.g., 'GameFrame.java' -> 'GameFrame')
-    clean_name="${base_name%$from_ext_dot}"
-
-    # 3. Construct the new file path in the 'convertify' folder
-    new_file_path="${TARGET_DIR}/${clean_name}${to_ext_dot}"
-
-    # 4. Copy the file
-    cp "$file" "$new_file_path"
-    echo "Copied '$file' to '$new_file_path'"
+# -------- Parse args --------
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -o)
+      shift
+      OUTPUT="${1:-}"
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      ;;
+    --yes)
+      AUTO_CONFIRM=true
+      ;;
+    --append)
+      APPEND=true
+      ;;
+    *)
+      INPUT_EXTS+=("$1")
+      ;;
+  esac
+  shift
 done
 
-echo "---"
-echo "Conversion complete! All matching files are flattened into the '$TARGET_DIR' folder."
+# -------- Validation --------
+if [[ -z "$OUTPUT" ]]; then
+  echo "✖ Missing output type. Use -o <ext>"
+  exit 1
+fi
+
+if [[ ${#INPUT_EXTS[@]} -eq 0 ]]; then
+  echo "✖ Provide at least one input extension."
+  exit 1
+fi
+
+TARGET_DIR="convertify"
+mkdir -p "$TARGET_DIR"
+
+echo "--- Configuration ---"
+echo "Output type: .$OUTPUT"
+echo "Input types: ${INPUT_EXTS[*]}"
+echo "Mode: $([[ $APPEND == true ]] && echo 'append' || echo 'replace')"
+echo
+
+# -------- Collect files --------
+FILES=()
+
+for ext in "${INPUT_EXTS[@]}"; do
+  while IFS= read -r -d '' file; do
+    FILES+=("$file")
+  done < <(find . -type f -name "*.$ext" -print0)
+done
+
+if [[ ${#FILES[@]} -eq 0 ]]; then
+  echo "✖ No matching files found."
+  exit 1
+fi
+
+echo "Found ${#FILES[@]} file(s) to convert."
+
+# -------- Confirm --------
+if ! $AUTO_CONFIRM; then
+  echo
+  read -rp "Proceed converting to .$OUTPUT? [y/N]: " confirm
+  [[ "$confirm" =~ ^[Yy]$ ]] || {
+    echo "Cancelled."
+    exit 0
+  }
+fi
+
+echo
+echo "--- Converting ---"
+
+for file in "${FILES[@]}"; do
+  base_name=$(basename "$file")
+
+  if $APPEND; then
+    # app.tsx -> app.tsx.txt
+    new_name="${base_name}.${OUTPUT}"
+  else
+    # app.tsx -> app.txt
+    clean_name="${base_name%.*}"
+    new_name="${clean_name}.${OUTPUT}"
+  fi
+
+  new_file_path="${TARGET_DIR}/${new_name}"
+
+  if [[ -e "$new_file_path" ]]; then
+    echo "⚠ Skipping (exists): $new_file_path"
+    continue
+  fi
+
+  if $DRY_RUN; then
+    echo "[dry-run] Would copy '$file' → '$new_file_path'"
+  else
+    cp "$file" "$new_file_path"
+    echo "Copied '$file' → '$new_file_path'"
+  fi
+done
+
+echo
+echo "✔ Done. All outputs in '$TARGET_DIR/'"
